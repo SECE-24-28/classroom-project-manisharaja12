@@ -1,0 +1,27 @@
+*{
+    margin-top:10px;
+}
+
+.ol{
+    display: flex;
+   justify-content: space-evenly;
+  list-style-type: none;
+  padding:10px;
+
+}
+
+header{
+background-color: blueviolet;
+
+}
+
+.li{
+    text-decoration:none;
+    color: white;
+    padding:1px;
+}
+.li:hover{
+    background-color: rgb(227, 230, 220);
+    color: rgb(2, 9, 5);
+    border-radius: 5px;
+}
