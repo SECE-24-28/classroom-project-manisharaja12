@@ -1,39 +1,68 @@
+import { Link } from "react-router-dom";
 import { useState } from "react";
+import axios from "axios";
 
-export default function App() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState("");
+function Login() {
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [message, setMessage] = useState("");
 
-  const handleLogin = () => {
-    if (email === "admin@gmail.com" && password === "1234") {
-      setStatus("Login Successful");
-    } else {
-      setStatus("Login Failed");
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:8001/login", formData);
+      setMessage("Login successful!");
+      console.log(response.data);
+    } catch (error) {
+      setMessage(error.response?.data?.Message || "Login failed");
     }
   };
 
   return (
-    <>
+    <div>
       <h2>Login</h2>
+      {message && <p style={{color: message.includes('successful') ? 'green' : 'red'}}>{message}</p>}
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Email</label><br />
+          <input 
+            type="email" 
+            name="email" 
+            value={formData.email}
+            onChange={handleChange}
+            required 
+          />
+        </div>
 
-      <input
-        type="email"
-        value={email}
-        placeholder="Email"
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <br />
 
-      <input
-        type="password"
-        value={password}
-        placeholder="Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <div>
+          <label>Password</label><br />
+          <input 
+            type="password" 
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required 
+          />
+        </div>
 
-      <button onClick={handleLogin}>Login</button>
+        <br />
 
-      <p>{status}</p>
-    </>
+        <button type="submit">Login</button>
+      </form>
+
+      <br />
+
+      <p>
+        Don't have an account?
+        <Link to="/signup"> Sign up</Link>
+      </p>
+    </div>
   );
 }
+
+export default Login;
