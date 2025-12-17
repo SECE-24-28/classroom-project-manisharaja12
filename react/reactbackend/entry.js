@@ -1,29 +1,34 @@
+// entry.js
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
-const PORT = 8001;
+const PORT = process.env.PORT || 8001; // Render provides the PORT
 
 /* ===== Middleware ===== */
 app.use(cors());
 app.use(express.json());
 
-/* ===== MongoDB Connection ===== */
+/* ===== MongoDB Connection (Direct URL) ===== */
 mongoose
-  .connect("mongodb://localhost:27017/Mern")
+  .connect("mongodb+srv://cys:cys@cluster0.kalhhsd.mongodb.net/Mern", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log(err));
+  .catch((err) => console.log("MongoDB connection error:", err));
 
 /* ===== Schema ===== */
 const userSchema = new mongoose.Schema({
-  email: String,
-  password: String,
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
 });
 
 const User = mongoose.model("User", userSchema);
 
-/* ===== Home ===== */
+/* ===== Home Route ===== */
 app.get("/", (req, res) => {
   res.send("Backend running");
 });
@@ -32,34 +37,52 @@ app.get("/", (req, res) => {
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    return res.json({ message: "User already exists" });
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password required" });
   }
 
-  const newUser = new User({ email, password });
-  await newUser.save();
+  try {
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
-  res.json({ message: "Signup successful" });
+    const newUser = new User({ email, password });
+    await newUser.save();
+
+    res.status(201).json({ message: "Signup successful" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
-/* ===== Login API (THIS WAS MISSING) ===== */
+/* ===== Login API ===== */
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email, password });
-
-  if (!user) {
-    return res.json({
-      message: "Invalid email or password",
-      isLoggedIn: false,
-    });
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password required" });
   }
 
-  res.json({
-    message: "Login successful",
-    isLoggedIn: true,
-  });
+  try {
+    const user = await User.findOne({ email, password });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+        isLoggedIn: false,
+      });
+    }
+
+    res.json({
+      message: "Login successful",
+      isLoggedIn: true,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 /* ===== Start Server ===== */
